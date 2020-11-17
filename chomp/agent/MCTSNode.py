@@ -12,13 +12,19 @@ class MCTSNode(object):
             Player.bob: 0,
         }
         self.num_rollouts = 0
-        self.children = 0
-        self.unvisited_moves = game_state.legal_moves()
+        self.children = []
+        self.unvisited_moves = game_state.get_valid_moves()
 
     def add_random_child(self):
         index = random.randint(0, len(self.unvisited_moves) - 1)
         new_move = self.unvisited_moves.pop(index)
-        new_game_state = self.game_state.apply_move(new_move)
+        new_game_state = self.game_state.clone()
+        #new_game_state = self.game_state.apply_move(new_move)
+        new_game_state.apply_move(new_move)
+
+        #Test
+        #print(new_game_state)
+
         new_node = MCTSNode(new_game_state, self, new_move)
         self.children.append(new_node)
         return new_node
@@ -30,6 +36,8 @@ class MCTSNode(object):
     def can_add_children(self):
         return len(self.unvisited_moves) > 0
 
+    def winning_frac(self, player):
+        return float(self.win_counts[player])//float(self.num_rollouts)
     
 
     def is_terminal(self):

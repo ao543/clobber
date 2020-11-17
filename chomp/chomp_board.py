@@ -18,6 +18,19 @@ class Board():
 
 
 
+	def clone(self):
+		num_rows = self.num_rows
+		num_cols = self.num_cols
+		new_Board = Board(num_rows, num_cols)
+		#new_grid = [[1 for i in range(num_cols)] for j in range(num_rows)]
+		for i in range(num_rows):
+			for j in range(num_cols):
+				new_Board.grid[i][j] = self.grid[i][j]
+
+		return new_Board
+
+
+
 
 
 	def make_move(self, move):
@@ -40,10 +53,18 @@ class GameState():
 		self.previous_player = previous_player
 
 
+	def get_winner(self):
+		return self.next_player
+
+
 	def apply_move(self, move):
 		self.board.make_move(move)
 		self.previous_player = self.previous_player.other
 		self.next_player = self.next_player.other
+
+	def clone(self):
+		#not sure about correct enum handling here
+		return GameState(self.board.clone(), self.next_player, self.previous_player)
 
 	def is_over(self):
 		return (self.board.grid[self.board.num_rows][0] == 0)
