@@ -33,11 +33,12 @@ class MCTSNode(object):
         self.win_counts[winner] += 1
         self.num_rollouts += 1
 
+
     def can_add_children(self):
         return len(self.unvisited_moves) > 0
 
     def winning_frac(self, player):
-        return float(self.win_counts[player])//float(self.num_rollouts)
+        return float(self.win_counts[player])/float(self.num_rollouts)
     
 
     def is_terminal(self):

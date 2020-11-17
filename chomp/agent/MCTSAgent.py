@@ -34,8 +34,13 @@ class MCTSAgent(Agent):
         best_move = None
         best_pct = -1.0
 
+
+
         for child in root.children:
             child_pct = child.winning_frac(game_state.next_player)
+
+
+
             if child_pct > best_pct:
                 best_pct = child_pct
                 best_move = child.move
