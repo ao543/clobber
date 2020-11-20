@@ -10,6 +10,6 @@ def print_board(board):
 	for r in range(board.num_rows):
 		print("")
 		for c in range(board.num_cols):
-			print(board.grid[r][c], end="")
+			print(board.grid[r][c], end='')
 
 
