@@ -5,6 +5,9 @@ class Move:
 		self.row = row
 		self.col = col
 
+	def print_mov(self):
+		print("(" + str(self.row) + "," + str(self.col) + ")" )
+
 
 class Board():
 

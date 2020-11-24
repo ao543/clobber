@@ -6,6 +6,8 @@ def print_move(player, move):
 	print("(" +str(move.row) + "," + str(move.col) + ")" )
 
 
+
+
 def print_board(board):
 	for r in range(board.num_rows):
 		print("")
