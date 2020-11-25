@@ -32,7 +32,7 @@ def main():
     parser.add_argument('--rounds', '-r', type=int, default=9)
     parser.add_argument('--temperature', '-t', type=float, default=.8)
     parser.add_argument('--max-move', '-m', type=int, default = 60, help='max moves per game')
-    parser.add_argument('--num-games', '-n', type=int, default = 1)
+    parser.add_argument('--num-games', '-n', type=int, default = 2)
     parser.add_argument('--board-out', default = 'features.npy')
     parser.add_argument('--move-out', default = 'labels.npy')
     args = parser.parse_args()
