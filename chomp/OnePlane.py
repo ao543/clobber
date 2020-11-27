@@ -23,7 +23,23 @@ class OnePlane:
         return self.board_width * self.board_height
 
     def encode_move(self, move):
-        return self.board_width * (move.row - 1) + (move.col -1 )
+        return (self.board_width * (move.row )) + (move.col)
 
     def shape(self):
         return 1, self.board_height, self.board_width
+
+    def decode_move(self, one_hot):
+        hot_index = np.argmax(one_hot)
+        row = (hot_index//self.board_width)
+        col = (hot_index % self.board_width)
+        decoded_move = Move(row, col)
+        return decoded_move
+
+    def decode_move_int(self, mov):
+        hot_index = mov
+        row = (hot_index//self.board_width)
+        col = (hot_index % self.board_width)
+        decoded_move = Move(row, col)
+        return decoded_move
+
+
