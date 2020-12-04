@@ -1,11 +1,12 @@
 from chomp.OnePlane import OnePlane
 import numpy as np
+from fastai.vision.all import *
 
 
 class PolicyAgent(Agent):
 
     def __init__(self, model, encoder):
-        self.model = model
+        self.model = None
         self.encoder = encoder
 
 
@@ -47,3 +48,21 @@ class PolicyAgent(Agent):
                 if self.collector is not None:
                     self.collector.record_decision(state = board_tensor, action = point_idx)
                 return move
+
+    #Rewritten to write output with negative of label
+    def prepare_experience_data(self, experience, board_width, board_height):
+        experience_size = experience.actions.shape[0]
+        target_vectors = np.zeros( (experience_size, board_height * board_width) )
+        for i in range(experience_size):
+            action = experience.actions[i]
+            reward = experience.rewards[i]
+            target_vectors[i][action] = reward
+        return target_vectors
+
+
+
+
+
+    def train_reinf(self, experience):
+        target_vectors = self.prepare_experience_data(experience, self.encoder.board_width, self.encoder.board_width)
+        dls = Image

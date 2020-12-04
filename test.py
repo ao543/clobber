@@ -1,3 +1,6 @@
+#Point seems to  be to convert to image 
+
+
 import numpy as np
 from chomp import OnePlane
 import matplotlib.pyplot as plt
