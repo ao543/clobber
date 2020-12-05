@@ -1,7 +1,7 @@
 import numpy as np
 from keras.models import Sequential
-from keras.layers.core import Dense
-from keras.layers import Conv2D, Flatten
+from keras.layers.core import Dense, Dropout
+from keras.layers import Conv2D, Flatten, MaxPooling2D
 
 def test_1():
     np.random.seed(123)
@@ -47,6 +47,41 @@ def test_2():
                      input_shape = input_shape))
     model.add(Conv2D(48, (3, 3), activation = 'sigmoid', padding = 'same'))
 
+def test_3():
+    np.random.seed(123)
+    X = np.load('/Users/andrew/Desktop/chomp_proj/features.npy')
+    Y = np.load('/Users/andrew/Desktop/chomp_proj/labels.npy')
+    samples = X.shape[0]
+    size = 5
+    input_shape = (size, size, 1)
+    X = X.reshape(samples, size, size, 1)
+    train_samples = int(.9 * samples)
+    X_train, X_test = X[:train_samples], X[train_samples:]
+    Y_train, Y_test = Y[:train_samples], Y[train_samples:]
+
+    model = Sequential()
+    model.add(Conv2D(48, kernel_size=(3,3),  activation='relu', padding = 'same',input_shape = input_shape ) )
+    model.add(Dropout(rate=0.5))
+    model.add(Conv2D(48, kernel_size=(3,3), padding='same', activation='relu') )
+    model.add(MaxPooling2D(pool_size=(2,2)))
+    model.add(Dropout(rate=0.5))
+    model.add(Flatten())
+    model.add(Dense(512, activation='relu'))
+    model.add(Dropout(rate=0.5))
+    model.add(Dense(size * size, activation='softmax'))
+    model.summary()
+
+    model.compile(loss = 'categorical_crossentropy', optimizer = 'sgd', metrics=['accuracy'])
+
+    model.fit(X_train, Y_train, batch_size=64, epochs=100, verbose=1, validation_data=(X_test, Y_test))
+
+    score = model.evaluate(X_test, Y_test, verbose=0)
+
+    print('Test loss: ', score[0])
+    print('Test accuracy: ', score[1])
+
+
 if __name__ == '__main__':
     #test_1()
-    test_2()
+    #test_2()
+    test_3()

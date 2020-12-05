@@ -1,6 +1,23 @@
 import numpy as np
 
 
+def combine_experience(collectors):
+    combined_states = np.concatenate([np.array(c.states) for c in collectors])
+    combined_actions = np.concatenate([np.array(c.actions) for c in collectors])
+    combined_rewards = np.concatenate([np.array(c.rewards) for c in collectors])
+
+
+    return ExperienceBuffer(
+        combined_states,
+        combined_actions,
+        combined_rewards)
+
+def load_experience(h5file):
+    return ExperienceBuffer(states=np.array(h5file['experience']['states']),
+                            actions=np.array(h5file['experience']['actions']),
+                            rewards = np.array(h5file['experience']['rewards'])
+                            )
+
 class ExperienceBuffer:
 
     def __init__(self, states, actions, rewards):
@@ -9,16 +26,14 @@ class ExperienceBuffer:
         self.rewards = rewards
 
     def serialize(self, h5file):
+
         h5file.create_group('experience')
         h5file['experience'].create_dataset('states', data=self.states)
         h5file['experience'].create_dataset('actions', data=self.actions)
         h5file['experience'].create_dataset('rewards', data=self.rewards)
 
-    def load_experience(self, h5file):
-        return ExperienceBuffer(states=np.array(h5file['experience']['states']),
-                                actions=np.array(h5file['experience']['actions']),
-                                rewards=np.array(h5file['experience']['rewards'])
-                                )
+
+
 
 class ExperienceCollector:
 

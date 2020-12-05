@@ -1,12 +1,16 @@
+from keras.optimizers import SGD
+
 from chomp.OnePlane import OnePlane
 import numpy as np
-from fastai.vision.all import *
+#from fastai.vision.all import *
+from chomp import kerasutil
 
+from chomp.agent.base import Agent
 
 class PolicyAgent(Agent):
 
-    def __init__(self, model, encoder):
-        self.model = None
+    def __init__(self, encoder, model = None):
+        self.model = model
         self.encoder = encoder
 
 
@@ -15,18 +19,27 @@ class PolicyAgent(Agent):
         h5file['encoder'].attrs['name'] = self.encoder.name()
         h5file['encoder'].attrs['board_width'] = self.encoder.board_width
         h5file['encoder'].attrs['board_height'] = self.encoder.board_height
-        self.model.save()
+        h5file.create_group('model')
+        kerasutil.save_model_to_hdf5_group(self.model, h5file['model'])
 
-    def load_policy_agent(self, h5file):
-        model = self.model.load()
+
+    def set_collector(self, collector):
+        self.collector = collector
+
+
+    @staticmethod
+    def load_policy_agent(h5file):
+        model = kerasutil.load_model_from_hdf5_group(h5file['model'])
         encoder_name = h5file['encoder'].attrs['name']
         board_width = h5file['encoder'].attrs['board_width']
         board_height = h5file['encoder'].attrs['board_height']
-        encoder = OnePlane(board_width)
-        return PolicyAgent(model, encoder )
+        encoder = encoders.get_encoder_by_name(encoder_name, (board_width, board_height))
+        return PolicyAgent(model, encoder)
+
 
     def clip_probs(self, original_probs):
-        original_probs = original_probs.numpy()
+        #Think may already be numpy array
+        #original_probs = original_probs.numpy()
         min_p = 1e-5
         max_p = 1 - min_p
         clipped_probs = np.clip(original_probs, min_p, max_p)
@@ -36,11 +49,22 @@ class PolicyAgent(Agent):
 
     def select_move(self, game_state):
         board_tensor = self.encoder.encode(game_state)
-        move_probs = (self.model.predict(board_tensor))[2]
+
+        #Test
+        print("test")
+        #print(board_tensor)
+        #print("hello0")
+        #print(np.expand_dims(board_tensor, -1).shape)
+        board_tensor = np.expand_dims(board_tensor, -1)
+        #print(self.model.predict(board_tensor)[0])
+        #print('hello1')
+
+
+        move_probs = (self.model.predict(board_tensor))[0]
         move_probs = self.clip_probs(move_probs)
         num_moves = self.encoder.board_height * self.encoder.board_width
-        candidates = np.arrange(num_moves)
-        ranked_moves = np.random.choice(candidates, num_moves, replace = False, p = move_probs)
+        candidates = np.arange(num_moves)
+        ranked_moves = np.random.choice(candidates, num_moves, replace=False, p=move_probs)
 
         for point_idx in ranked_moves:
             move = self.encoder.decode_move_int(point_idx)
@@ -52,17 +76,19 @@ class PolicyAgent(Agent):
     #Rewritten to write output with negative of label
     def prepare_experience_data(self, experience, board_width, board_height):
         experience_size = experience.actions.shape[0]
-        target_vectors = np.zeros( (experience_size, board_height * board_width) )
+        target_vectors = np.zeros((experience_size, board_width * board_height))
         for i in range(experience_size):
             action = experience.actions[i]
             reward = experience.rewards[i]
             target_vectors[i][action] = reward
+
         return target_vectors
 
 
 
+    def train(self, experience, lr, batch_size):
+        #clipnorm=clipnorm
+        self.model.compile(loss='categorical_crossentropy', optimizer=SGD(lr=lr, clipnorm=1.0))
+        target_vectors = self.prepare_experience_data(experience, self.encoder.board_width, self.encoder.board_height)
+        self.model.fit(experience.states, target_vectors, batch_size=batch_size, epochs=1)
 
-
-    def train_reinf(self, experience):
-        target_vectors = self.prepare_experience_data(experience, self.encoder.board_width, self.encoder.board_width)
-        dls = Image
