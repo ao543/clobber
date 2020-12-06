@@ -11,7 +11,7 @@ class Move:
 
 class Board():
 
-	def __init__(self, num_rows, num_cols):
+	def __init__(self, num_rows = 2, num_cols = 2):
 		#1 is board, 2 critical, 0 taken
 		self.num_rows = num_rows
 		self.num_cols = num_cols
@@ -73,7 +73,7 @@ class GameState():
 		return (self.board.grid[self.board.num_rows][0] == 0)
 
 	@classmethod
-	def new_game(self, row_size, col_size):
+	def new_game(self, row_size = 2, col_size = 2):
 		board = Board(row_size, col_size)
 		return GameState(board, Player.alice, Player.bob)
 

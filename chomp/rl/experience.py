@@ -53,6 +53,10 @@ class ExperienceCollector:
         self.current_episode_actions.append(action)
 
     def complete_episode(self, reward):
+        #Test
+        #print("hello")
+        #print(self.states[1].shape)
+
         num_states = len(self.current_episode_states)
         self.states += self.current_episode_states
         self.actions += self.current_episode_actions

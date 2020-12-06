@@ -4,14 +4,21 @@ from chomp.chomp_board import Move
 
 class OnePlane:
 
-    def __init__(self, board_size):
-        self.board_width, self.board_height = board_size, board_size
+    def __init__(self, board_size = 2):
+        #self.board_width, self.board_height = board_size, board_size
+        self.board_width, self.board_height = 2,2
         self.num_planes = 1
 
     def name(self):
         return 'OnePlane'
 
     def encode(self, game_state):
+        #Test
+        print("test-v")
+        print(self.shape())
+        print(self.board_height)
+        print(self.board_width)
+
         board_matrix = np.zeros(self.shape())
         for i in range(self.board_height):
             for j in range(self.board_width):

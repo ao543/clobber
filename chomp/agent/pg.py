@@ -12,6 +12,7 @@ class PolicyAgent(Agent):
     def __init__(self, encoder, model = None):
         self.model = model
         self.encoder = encoder
+        self.collector = None
 
 
     def serialize(self, h5file):
@@ -33,8 +34,9 @@ class PolicyAgent(Agent):
         encoder_name = h5file['encoder'].attrs['name']
         board_width = h5file['encoder'].attrs['board_width']
         board_height = h5file['encoder'].attrs['board_height']
-        encoder = encoders.get_encoder_by_name(encoder_name, (board_width, board_height))
-        return PolicyAgent(model, encoder)
+        encoder = OnePlane(2)
+        #encoder = OnePlane(board_width)
+        return PolicyAgent(encoder, model)
 
 
     def clip_probs(self, original_probs):
@@ -48,16 +50,12 @@ class PolicyAgent(Agent):
 
 
     def select_move(self, game_state):
+
+
         board_tensor = self.encoder.encode(game_state)
 
-        #Test
-        print("test")
-        #print(board_tensor)
-        #print("hello0")
-        #print(np.expand_dims(board_tensor, -1).shape)
         board_tensor = np.expand_dims(board_tensor, -1)
-        #print(self.model.predict(board_tensor)[0])
-        #print('hello1')
+
 
 
         move_probs = (self.model.predict(board_tensor))[0]
@@ -90,5 +88,5 @@ class PolicyAgent(Agent):
         #clipnorm=clipnorm
         self.model.compile(loss='categorical_crossentropy', optimizer=SGD(lr=lr, clipnorm=1.0))
         target_vectors = self.prepare_experience_data(experience, self.encoder.board_width, self.encoder.board_height)
-        self.model.fit(experience.states, target_vectors, batch_size=batch_size, epochs=1)
+        self.model.fit(experience.states, target_vectors, batch_size=batch_size, epochs=10)
 
