@@ -46,17 +46,19 @@ def base_model():
 
 def generate_experience(iteration, num_games = 1000):
     #Test filename
-
+    # bots = {Player.alice: naive.RandomBot(), Player.bob: naive.RandomBot()}
 
     if iteration != 0:
         agent_filename = 'agent' + str(iteration - 1) + '.hdf5'
         f = h5py.File(agent_filename, 'a')
         agent1 = PolicyAgent.load_policy_agent(f)
         agent2 = PolicyAgent.load_policy_agent(f)
+        #agent2 = naive.RandomBot()
     else:
         game_encoder = OnePlane(2)
         agent1 = PolicyAgent(game_encoder, base_model())
         agent2 = PolicyAgent(game_encoder, base_model())
+
 
     collector1 = ExperienceCollector()
     collector2 = ExperienceCollector()
@@ -165,8 +167,10 @@ def learning_cycle(cycles = 100):
 
     print(results)
 
+
+
 if __name__ == '__main__':
 	#generate_experience(10)
     #learn_from_experience()
     #compute_self_play_stats(is_default=True, learning_agent_filename=None, num_games=10000)
-    learning_cycle(cycles=100)
+    learning_cycle(cycles=50)
