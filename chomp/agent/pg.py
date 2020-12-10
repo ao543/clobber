@@ -34,8 +34,8 @@ class PolicyAgent(Agent):
         encoder_name = h5file['encoder'].attrs['name']
         board_width = h5file['encoder'].attrs['board_width']
         board_height = h5file['encoder'].attrs['board_height']
-        encoder = OnePlane(2)
-        #encoder = OnePlane(board_width)
+        #encoder = OnePlane(2)
+        encoder = OnePlane(board_width, board_height)
         return PolicyAgent(encoder, model)
 
 
@@ -59,14 +59,35 @@ class PolicyAgent(Agent):
 
 
         move_probs = (self.model.predict(board_tensor))[0]
+
+        #Test
+        #print("prob test")
+        #print(move_probs)
+
+        #Test
+        #print("valid moves2")
+        #for m in game_state.get_valid_moves():
+            #m.print_mov()
+
         move_probs = self.clip_probs(move_probs)
-        num_moves = self.encoder.board_height * self.encoder.board_width
+        num_moves = self.encoder.board_height * self.encoder.board_width * self.encoder.board_height * self.encoder.board_width
         candidates = np.arange(num_moves)
         ranked_moves = np.random.choice(candidates, num_moves, replace=False, p=move_probs)
 
+        #Test
+        #print("ranked moves:")
+        #print(ranked_moves)
+
         for point_idx in ranked_moves:
+            #Test
+            #print("reached move loop")
             move = self.encoder.decode_move_int(point_idx)
+            #Test
+            #print("recovered")
+            #move.print_mov()
             if game_state.is_valid_move(move):
+                #Test
+                #print("reached valid")
                 if self.collector is not None:
                     self.collector.record_decision(state = board_tensor, action = point_idx)
                 return move
@@ -74,7 +95,7 @@ class PolicyAgent(Agent):
     #Rewritten to write output with negative of label
     def prepare_experience_data(self, experience, board_width, board_height):
         experience_size = experience.actions.shape[0]
-        target_vectors = np.zeros((experience_size, board_width * board_height))
+        target_vectors = np.zeros((experience_size, board_width * board_height * board_width * board_height))
         for i in range(experience_size):
             action = experience.actions[i]
             reward = experience.rewards[i]

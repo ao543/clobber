@@ -3,7 +3,7 @@
 def print_move(player, move):
 	print("")
 	print(player)
-	print("(" +str(move.row) + "," + str(move.col) + ")" )
+	move.print_mov()
 
 
 

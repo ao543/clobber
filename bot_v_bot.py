@@ -1,6 +1,6 @@
 
 from chomp.agent import naive 
-from chomp.chomp_board import GameState
+from chomp.clobber_board import GameState
 from chomp.chomp_types import Player
 from chomp.utils import print_board, print_move
 from chomp.agent import MCTSAgent
@@ -11,8 +11,8 @@ def main():
 
 	board_size = 2
 	game = GameState.new_game(board_size, board_size)
-	#bots = {Player.alice: naive.RandomBot(), Player.bob: naive.RandomBot()}
-	bots = {Player.alice: MCTSAgent.MCTSAgent(500000, 1.5), Player.bob: MCTSAgent.MCTSAgent(500000, 1.5)}
+	bots = {Player.alice: naive.RandomBot(), Player.bob: naive.RandomBot()}
+	#bots = {Player.alice: MCTSAgent.MCTSAgent(500000, 1.5), Player.bob: MCTSAgent.MCTSAgent(500000, 1.5)}
 	#bots = {Player.alice: MCTSAgent.MCTSAgent(300000, 1.5), Player.bob: naive.RandomBot()}
 
 	while not game.is_over():
@@ -27,7 +27,7 @@ def main():
 	print_board(game.board)
 	print("")
 	print("Winner: ")
-	print(game.next_player)
+	print(game.get_winner())
 
 if __name__ == '__main__':
 	main()

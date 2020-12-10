@@ -1,7 +1,7 @@
 import argparse
 import numpy as np
 from chomp.OnePlane import OnePlane
-from chomp.chomp_board import GameState
+from chomp.clobber_board import GameState
 from chomp.agent import MCTSAgent
 from chomp.utils import print_board, print_move
 
