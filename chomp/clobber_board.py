@@ -15,16 +15,17 @@ class Board():
 
 	def __init__(self, num_rows = 2, num_cols = 2):
 		#1 is board, 2 critical, 0 taken
+		#1 is bob, .5 alice 0 empty
 		self.num_rows = num_rows
 		self.num_cols = num_cols
 		self.grid = [[1 for i in range(num_cols)] for j in range(num_rows)]
 
 		for i in range(num_rows):
 			for j in range(num_cols):
-				if (i % 2 == 0) and (j % 2 == 0):
-					self.grid[i][j] = 2
-				if (i % 2 == 1) and (j % 2 == 1):
-					self.grid[i][j] = 2
+				if (i % 2 == 0):
+					self.grid[i][j] = 1
+				if (i % 2 == 1):
+					self.grid[i][j] = .5
 
 
 
@@ -85,12 +86,16 @@ class GameState():
 		if(self.next_player == Player.alice):
 			if(self.board.grid[move.from_row][move.from_col] != 1):
 				return False
-			if(self.board.grid[move.to_row][move.to_col] != 2):
+			if(self.board.grid[move.to_row][move.to_col] != .5):
+				return False
+			if( abs((move.to_row - move.from_row)) + abs((move.to_col - move.from_col)) != 1  ):
 				return False
 		if(self.next_player == Player.bob):
-			if(self.board.grid[move.from_row][move.from_col] != 2):
+			if(self.board.grid[move.from_row][move.from_col] != .5):
 				return False
 			if(self.board.grid[move.to_row][move.to_col] != 1):
+				return False
+			if( abs((move.to_row - move.from_row)) + abs((move.to_col - move.from_col)) != 1  ):
 				return False
 		return True
 

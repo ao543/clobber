@@ -9,7 +9,7 @@ class OnePlane:
         self.board_width = BOARD_WIDTH
         self.board_height = BOARD_HEIGHT
         self.num_planes = 1
-        self.move_dict = [(0,0,0,0) for i in range(BOARD_WIDTH * BOARD_HEIGHT * BOARD_HEIGHT * BOARD_HEIGHT)]
+        self.move_dict = [(0,0,0,0) for i in range(BOARD_WIDTH * BOARD_WIDTH * BOARD_HEIGHT * BOARD_HEIGHT)]
 
 
         numb = 0

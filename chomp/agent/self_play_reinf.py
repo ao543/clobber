@@ -1,4 +1,5 @@
 import os
+from random import random
 
 import h5py
 
@@ -6,12 +7,14 @@ from chomp.OnePlane import OnePlane
 from chomp.clobber_board import GameState
 from chomp.chomp_types import Player
 from chomp.agent.pg import PolicyAgent
-from chomp.rl.experience import ExperienceCollector, combine_experience, load_experience
+from chomp.rl import experience
+from chomp.rl.experience import ExperienceCollector, combine_experience, load_experience, ExperienceBuffer
 import numpy as np
 from keras.models import Sequential
 from keras.layers.core import Dense, Dropout
 from keras.layers import Conv2D, Flatten, MaxPooling2D
 from chomp.agent.pg import PolicyAgent
+import random
 
 def simulate_game(alice, bob, BOARD_WIDTH, BOARD_HEIGHT):
     #black= 1st, white = second
@@ -52,10 +55,12 @@ def generate_experience(iteration, BOARD_WIDTH, BOARD_HEIGHT, num_games = 1000):
     # bots = {Player.alice: naive.RandomBot(), Player.bob: naive.RandomBot()}
 
     if iteration != 0:
-        agent_filename = 'agent' + str(iteration - 1) + '.hdf5'
-        f = h5py.File(agent_filename, 'a')
-        agent1 = PolicyAgent.load_policy_agent(f)
-        agent2 = PolicyAgent.load_policy_agent(f)
+        alice_filename = 'alice' + str(iteration - 1) + '.hdf5'
+        bob_filename = 'bob' + str(iteration - 1) + '.hdf5'
+        f1 = h5py.File(alice_filename, 'a')
+        f2 = h5py.File(bob_filename, 'a')
+        agent1 = PolicyAgent.load_policy_agent(f1)
+        agent2 = PolicyAgent.load_policy_agent(f2)
         #agent2 = naive.RandomBot()
     else:
         game_encoder = OnePlane(BOARD_WIDTH = BOARD_WIDTH, BOARD_HEIGHT = BOARD_HEIGHT)
@@ -92,10 +97,18 @@ def generate_experience(iteration, BOARD_WIDTH, BOARD_HEIGHT, num_games = 1000):
     #print(len(collector1.states))
     #print(len(collector1.states[1]))
 
-    experience = combine_experience([collector1, collector2])
-    experience_filename = 'experience' + str(iteration) + '.hdf5'
-    with h5py.File(experience_filename, 'w') as experience_outf:
-        experience.serialize(experience_outf)
+    #experience = combine_experience([collector1, collector2])
+    experience_filename1 = 'experience_alice' + str(iteration) + '.hdf5'
+    experience_filename2 = 'experience_bob' + str(iteration) + '.hdf5'
+
+    experience_buff1 = combine_experience([collector1])
+    experience_buff2 = combine_experience([collector2])
+
+    with h5py.File(experience_filename1, 'w') as experience_outf:
+        experience_buff1.serialize(experience_outf)
+
+    with h5py.File(experience_filename2, 'w') as experience_outf:
+        experience_buff2.serialize(experience_outf)
 
 def learn_from_experience(iteration, BOARD_WIDTH, BOARD_HEIGHT):
 
@@ -104,45 +117,60 @@ def learn_from_experience(iteration, BOARD_WIDTH, BOARD_HEIGHT):
     learning_rate = .0001
     #look into below
     clipnorm = 1.0
-    updated_agent_filename = 'agent' + str(iteration) + '.hdf5'
-    exp_filename = '/Users/andrew/Desktop/clobber_proj/chomp/agent/experience' + str(iteration) +'.hdf5'
+    #updated_agent_filename = 'agent' + str(iteration) + '.hdf5'
+    exp_filename1 = '/Users/andrew/Desktop/clobber_proj/chomp/agent/experience_alice' + str(iteration) +'.hdf5'
+    exp_filename2 = '/Users/andrew/Desktop/clobber_proj/chomp/agent/experience_bob' + str(iteration) + '.hdf5'
 
     if iteration == 0:
-        learning_agent = PolicyAgent(OnePlane(BOARD_WIDTH, BOARD_HEIGHT), base_model(BOARD_WIDTH, BOARD_HEIGHT))
+        learning_agent1 = PolicyAgent(OnePlane(BOARD_WIDTH, BOARD_HEIGHT), base_model(BOARD_WIDTH, BOARD_HEIGHT))
+        learning_agent2 = PolicyAgent(OnePlane(BOARD_WIDTH, BOARD_HEIGHT), base_model(BOARD_WIDTH, BOARD_HEIGHT))
     else:
-        agent_filename = 'agent' + str(iteration - 1) + '.hdf5'
-        learning_agent = PolicyAgent.load_policy_agent(h5py.File(agent_filename))
-    #for exp_filename in experience_files:
-    expr_file = h5py.File(exp_filename)
-    #Test
-    #print("green")
-    #print(expr_file)
-
-    exp_buffer = load_experience(expr_file)
-
-    #print("vegetables")
-    #print(exp_buffer.states.shape)
-    exp_buffer.states = np.squeeze(exp_buffer.states, axis = 1)
-    #print(exp_buffer.states.shape)
+        #agent_filename = 'agent' + str(iteration - 1) + '.hdf5'
+        agent_filename1 = 'alice' + str(iteration - 1) + '.hdf5'
+        agent_filename2 = 'bob' + str(iteration - 1) + '.hdf5'
+        learning_agent1 = PolicyAgent.load_policy_agent(h5py.File(agent_filename1))
+        learning_agent2 = PolicyAgent.load_policy_agent(h5py.File(agent_filename2))
 
 
-    learning_agent.train(exp_buffer, lr=learning_rate, batch_size=batch_size)
-    with h5py.File(updated_agent_filename, 'w') as updated_agent_outf:
-        learning_agent.serialize(updated_agent_outf)
+    expr_file1 = h5py.File(exp_filename1)
+    expr_file2 = h5py.File(exp_filename2)
+
+    exp_buffer1 = load_experience(expr_file1)
+    exp_buffer2 = load_experience(expr_file2)
+
+
+    exp_buffer1.states = np.squeeze(exp_buffer1.states, axis = 1)
+    exp_buffer2.states = np.squeeze(exp_buffer2.states, axis=1)
+
+    learning_agent1.train(exp_buffer1, lr=learning_rate, batch_size=batch_size)
+    learning_agent2.train(exp_buffer2, lr=learning_rate, batch_size=batch_size)
+
+    updated_agent_filename1 = 'alice' + str(iteration) + '.hdf5'
+    updated_agent_filename2 = 'bob' + str(iteration) + '.hdf5'
+
+    with h5py.File(updated_agent_filename1, 'w') as updated_agent_outf:
+        learning_agent1.serialize(updated_agent_outf)
+
+    with h5py.File(updated_agent_filename2, 'w') as updated_agent_outf:
+        learning_agent2.serialize(updated_agent_outf)
 
 def compute_self_play_stats(iteration, BOARD_WIDTH, BOARD_HEIGHT,  num_games = 10000):
-    agent_filename = 'agent' + str(iteration) + '.hdf5'
+
+    agent_filename1 = 'alice' + str(iteration) + '.hdf5'
+    agent_filename2 = 'bob' + str(iteration) + '.hdf5'
 
     if iteration == 0:
-        learning_agent = PolicyAgent(OnePlane(BOARD_WIDTH, BOARD_HEIGHT), base_model(BOARD_WIDTH, BOARD_HEIGHT))
+        learning_agent1 = PolicyAgent(OnePlane(BOARD_WIDTH, BOARD_HEIGHT), base_model(BOARD_WIDTH, BOARD_HEIGHT))
+        learning_agent2 = PolicyAgent(OnePlane(BOARD_WIDTH, BOARD_HEIGHT), base_model(BOARD_WIDTH, BOARD_HEIGHT))
     else:
-        learning_agent = PolicyAgent.load_policy_agent(h5py.File(agent_filename))
+        learning_agent1 = PolicyAgent.load_policy_agent(h5py.File(agent_filename1))
+        learning_agent2 = PolicyAgent.load_policy_agent(h5py.File(agent_filename2))
 
     win_record = {Player.alice: 0, Player.bob: 0}
 
     for i in range(num_games):
 
-        game_record = simulate_game(learning_agent, learning_agent, BOARD_WIDTH = BOARD_WIDTH, BOARD_HEIGHT = BOARD_HEIGHT)
+        game_record = simulate_game(learning_agent1, learning_agent2, BOARD_WIDTH = BOARD_WIDTH, BOARD_HEIGHT = BOARD_HEIGHT)
 
         if game_record == Player.alice:
             win_record[Player.alice] += 1
@@ -183,5 +211,9 @@ def clean_directory():
 
 
 if __name__ == '__main__':
-    #learning_cycle(BOARD_WIDTH = 2, BOARD_HEIGHT = 2, cycles=2)
-    clean_directory()
+    random.seed(34)
+    #Experiment for lemma 3.4-magnitude 10s
+    #x = random.randrange(10, 100, 2)
+    #print(x)
+    #learning_cycle(BOARD_WIDTH = 8, BOARD_HEIGHT = 2, cycles= 100)
+    #clean_directory()
